@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
 #----------------------------------------------------------------------
+# This command template is taken from the LLVM project:
+# http://llvm.org/svn/llvm-project/lldb/trunk/examples/python/cmdtemplate.py
+# and modified for more recent versions of Python.
+#
 # Be sure to add the python path that points to the LLDB shared library.
 #
 # # To use this in the embedded python interpreter using "lldb" just
@@ -11,43 +15,43 @@
 
 import lldb
 import commands
-import optparse
+import argparse
 import shlex
 
 
 def create_framestats_options():
-    usage = "usage: %prog [options]"
+    usage = "usage: %(prog)s [options]"
     description = '''This command is meant to be an example of how to make an LLDB command that
 does something useful, follows best practices, and exploits the SB API.
 Specifically, this command computes the aggregate and average size of the variables in the current frame
 and allows you to tweak exactly which variables are to be accounted in the computation.
 '''
-    parser = optparse.OptionParser(
+    parser = argparse.ArgumentParser(
         description=description,
         prog='framestats',
         usage=usage)
-    parser.add_option(
+    parser.add_argument(
         '-i',
         '--in-scope',
         action='store_true',
         dest='inscope',
         help='in_scope_only = True',
         default=False)
-    parser.add_option(
+    parser.add_argument(
         '-a',
         '--arguments',
         action='store_true',
         dest='arguments',
         help='arguments = True',
         default=False)
-    parser.add_option(
+    parser.add_argument(
         '-l',
         '--locals',
         action='store_true',
         dest='locals',
         help='locals = True',
         default=False)
-    parser.add_option(
+    parser.add_argument(
         '-s',
         '--statics',
         action='store_true',
@@ -63,10 +67,10 @@ def the_framestats_command(debugger, command, result, dict):
     command_args = shlex.split(command)
     parser = create_framestats_options()
     try:
-        (options, args) = parser.parse_args(command_args)
+        args = parser.parse_args(command_args)
     except:
-        # if you don't handle exceptions, passing an incorrect argument to the OptionParser will cause LLDB to exit
-        # (courtesy of OptParse dealing with argument errors by throwing SystemExit)
+        # if you don't handle exceptions, passing an incorrect argument to the ArgumentParser will cause LLDB to exit
+        # (courtesy of argparse dealing with argument errors by throwing SystemExit)
         result.SetError("option parsing failed")
         return
 
@@ -81,10 +85,10 @@ def the_framestats_command(debugger, command, result, dict):
         return "no frame here"
     # from now on, replace lldb.<thing>.whatever with <thing>.whatever
     variables_list = frame.GetVariables(
-        options.arguments,
-        options.locals,
-        options.statics,
-        options.inscope)
+        args.arguments,
+        args.locals,
+        args.statics,
+        args.inscope)
     variables_count = variables_list.GetSize()
     if variables_count == 0:
         print >> result, "no variables here"
